@@ -4,10 +4,8 @@ kind: Provisioner
 metadata:
   name: {{ .Values.karpenter }}
 spec:
-  # scale down nodes after 60 seconds without workloads (excluding daemons)
-  ttlSecondsAfterEmpty: 60 
-  # expire nodes after 7 days (in seconds) = 7 * 60 * 60 * 24
-  ttlSecondsUntilExpired: 604800 
+  ttlSecondsAfterEmpty: 60 # scale down nodes after 60 seconds without workloads (excluding daemons)
+  ttlSecondsUntilExpired: 600 # expire nodes after 10 minutes (in seconds) = 10 * 60
   limits:
     resources:
       cpu: 100 # limit to 100 CPU cores
@@ -15,14 +13,14 @@ spec:
     # Include general purpose instance families
     - key: karpenter.k8s.aws/instance-family
       operator: In
-      values: [c5, m5, r5]
+      values: [t3, t2]
     # Exclude small instance sizes
     - key: karpenter.k8s.aws/instance-size
       operator: NotIn
-      values: [nano, micro, small, large]
+      values: [nano, micro, small]
     - key: "karpenter.sh/capacity-type" # Defaults to on-demand
       operator: In
-      values: ["spot"]
+      values: ["on-demand"]
   providerRef:
     name: my-provider
 ---
@@ -32,6 +30,6 @@ metadata:
   name: my-provider
 spec:
   subnetSelector:
-    kubernetes.io/cluster/demo: owned
+    kubernetes.io/cluster/demo-prod: owned
   securityGroupSelector:
-    kubernetes.io/cluster/demo: owned
+    kubernetes.io/cluster/demo-prod: owned
